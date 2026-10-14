@@ -116,7 +116,7 @@
   .name {
     font-family: "Abril Fatface", "Bodoni 72", Didot, serif; font-weight: 400;
     line-height: .98; text-align: center; white-space: nowrap; width: 100%;
-    text-shadow: 0 .14em 0 var(--d);
+    text-shadow: var(--sh, 0 .14em 0 var(--d));
   }
   .team-label {
     margin-top: .8em; font: 400 2.3em/1 "Abril Fatface", serif; letter-spacing: .1em; white-space: nowrap; max-width: 100%;
@@ -195,8 +195,8 @@ const TEAMS = [
   { id: 'executive',    label: 'EXECUTIVE',         short: 'Exec',     c: '#c22723', d: '#7a0302', t: '#ffffff' },
   { id: 'dj',           label: 'DJ',                short: 'DJ',       c: '#211a3a', d: '#0d0a18', t: '#f5cf1d' },
   { id: 'witch',        label: 'TEAM WITCH',        short: 'Witch',    c: '#c03923', d: '#7a0403', t: '#ffffff' },
-  { id: 'werewolf',     label: 'TEAM WEREWOLF',     short: 'Werewolf', c: '#c6cb1f', d: '#6c7303', t: '#1a1a0a', lt: '#ffffff' },
-  { id: 'zombie',       label: 'TEAM ZOMBIE',       short: 'Zombie',   c: '#99c322', d: '#3f7501', t: '#10200a', lt: '#ffffff' },
+  { id: 'werewolf',     label: 'TEAM WEREWOLF',     short: 'Werewolf', c: '#c6cb1f', d: '#6c7303', t: '#1a1a0a', lt: '#ffffff', sh: 'none' },
+  { id: 'zombie',       label: 'TEAM ZOMBIE',       short: 'Zombie',   c: '#99c322', d: '#3f7501', t: '#10200a', lt: '#ffffff', sh: 'none' },
   { id: 'frankenstein', label: 'TEAM FRANKENSTEIN', short: 'Franken.',  c: '#459b3a', d: '#084808', t: '#ffffff' },
   { id: 'skull',        label: 'TEAM SKULL',        short: 'Skull',    c: '#3a9f91', d: '#16594a', t: '#ffffff' },
   { id: 'vampire',      label: 'TEAM VAMPIRE',      short: 'Vampire',  c: '#3c8aae', d: '#032061', t: '#ffffff' },
@@ -217,7 +217,7 @@ let current = 'zombie';
 
 const $ = s => document.querySelector(s);
 const esc = s => s.replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
-const vars = t => `--c:${t.c};--d:${t.d};--t:${t.t};${t.lt ? `--lt:${t.lt};` : ''}--img:url(${CARDS[t.id]})`;
+const vars = t => `--c:${t.c};--d:${t.d};--t:${t.t};${t.lt ? `--lt:${t.lt};` : ''}${t.sh ? `--sh:${t.sh};` : ''}--img:url(${CARDS[t.id]})`;
 
 function load() {
   try { return (JSON.parse(localStorage.getItem(STORE)) || []).filter(t => CARDS[t.team]); } catch { return []; }
