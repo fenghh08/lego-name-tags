@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LE'GO Name Tags</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Creepster&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Condensed:wght@400..700&family=Abril+Fatface&family=Alfa+Slab+One&family=Anton&family=Bangers&family=Bebas+Neue&family=Creepster&family=Eater&family=Lilita+One&family=Luckiest+Guy&family=Rye&family=Shrikhand&family=Ultra&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #1b1530;
@@ -44,6 +44,8 @@
     width: 100%; background: var(--bg); color: var(--ink);
     border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit; font-size: 15px;
   }
+  select { width: 100%; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font: inherit; }
+  .font-sample { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--panel-2); font-size: 26px; line-height: 1.1; text-align: center; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   textarea { min-height: 110px; resize: vertical; font-size: 13px; line-height: 1.5; }
   input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
   .teams { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -114,7 +116,7 @@
     display: flex; flex-direction: column; align-items: center; z-index: 1;
   }
   .name {
-    font-family: "Abril Fatface", "Bodoni 72", Didot, serif; font-weight: 400;
+    font-family: var(--name-font, "Libre Caslon Condensed"), "Bodoni 72", Didot, serif; font-weight: var(--name-weight, 700);
     line-height: .98; text-align: center; white-space: nowrap; width: 100%;
     text-shadow: var(--sh, 0 .14em 0 var(--d));
   }
@@ -145,6 +147,10 @@
   <aside>
     <h1>Name Tags</h1>
     <p class="sub">LE'GO Dance Camp 2026 · ID card size, 9 per A4</p>
+
+    <label for="font">Name font</label>
+    <select id="font"></select>
+    <div class="font-sample" id="fontSample">Eason Chiang</div>
 
     <label for="name">Name</label>
     <input id="name" type="text" placeholder="e.g. Eason" autocomplete="off">
@@ -211,6 +217,23 @@ const byId = Object.fromEntries(TEAMS.map(t => [t.id, t]));
 const CARD = { w: 54, h: 86, cols: 3, rows: 3 };
 const GAP = 6, BLEED = 2, PER = CARD.cols * CARD.rows;
 const STORE = 'lego-nametags-v1';
+const FONT_STORE = 'lego-nametags-font';
+// [family, description, weight]
+const FONTS = [
+  ['Libre Caslon Condensed', 'Condensed serif, like the lanyard cords', 700],
+  ['Abril Fatface', 'Fat poster serif (closest to the lanyard text)'],
+  ['Alfa Slab One', 'Heavy slab serif'],
+  ['Ultra', 'Extra-heavy slab, very bold'],
+  ['Rye', 'Old western / circus poster'],
+  ['Shrikhand', 'Retro fat italic'],
+  ['Bebas Neue', 'Tall condensed caps, very clean'],
+  ['Anton', 'Bold condensed, poster style'],
+  ['Lilita One', 'Rounded and friendly'],
+  ['Luckiest Guy', 'Chunky cartoon'],
+  ['Bangers', 'Comic book'],
+  ['Creepster', 'Spooky (banner tagline style)'],
+  ['Eater', 'Gory horror, hardest to read'],
+];
 
 let tags = load();
 let current = 'zombie';
@@ -371,10 +394,28 @@ $('#sheets').addEventListener('click', e => {
 });
 $('#clear').onclick = () => { if (tags.length && confirm('Remove all tags?')) { tags = []; save(); render(); } };
 $('#print').onclick = () => window.print();
+let font = (() => { try { const f = localStorage.getItem(FONT_STORE); return FONTS.some(x => x[0] === f) ? f : FONTS[0][0]; } catch { return FONTS[0][0]; } })();
+function applyFont() {
+  const css = `"${font}"`, weight = FONTS.find(x => x[0] === font)[2] || 400;
+  document.documentElement.style.setProperty('--name-font', css);
+  document.documentElement.style.setProperty('--name-weight', weight);
+  $('#fontSample').style.fontFamily = `${css}, serif`;
+  $('#fontSample').style.fontWeight = weight;
+  document.fonts?.load(`${weight} 40px ${css}`).then(fitNames, fitNames);
+}
+$('#font').innerHTML = FONTS.map(([f, d]) => `<option value="${f}">${f} · ${d}</option>`).join('');
+$('#font').value = font;
+$('#font').addEventListener('change', () => {
+  font = $('#font').value;
+  try { localStorage.setItem(FONT_STORE, font); } catch {}
+  applyFont();
+});
+$('#name').addEventListener('input', () => $('#fontSample').textContent = $('#name').value.trim() || 'Eason Chiang');
 ['#cut', '#hole', '#sort'].forEach(s => $(s).addEventListener('change', render));
 
 renderTeams();
 render();
+applyFont();
 document.fonts?.ready.then(fitNames);
 </script>
 </body>
