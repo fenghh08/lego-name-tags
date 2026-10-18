@@ -144,10 +144,17 @@
     position: relative; z-index: 1; color: #fff; text-transform: uppercase; text-align: center;
     width: calc(100% / var(--sx)); max-width: none; transform: scaleX(var(--sx));
     /* black outline: rings of hard shadows trace each letter's shape (works with any font) */
-    text-shadow: 0.100em 0.000em 0 #000, 0.097em 0.026em 0 #000, 0.087em 0.050em 0 #000, 0.071em 0.071em 0 #000, 0.050em 0.087em 0 #000, 0.026em 0.097em 0 #000, 0.000em 0.100em 0 #000, -0.026em 0.097em 0 #000, -0.050em 0.087em 0 #000, -0.071em 0.071em 0 #000, -0.087em 0.050em 0 #000, -0.097em 0.026em 0 #000, -0.100em 0.000em 0 #000, -0.097em -0.026em 0 #000, -0.087em -0.050em 0 #000, -0.071em -0.071em 0 #000, -0.050em -0.087em 0 #000, -0.026em -0.097em 0 #000, -0.000em -0.100em 0 #000, 0.026em -0.097em 0 #000, 0.050em -0.087em 0 #000, 0.071em -0.071em 0 #000, 0.087em -0.050em 0 #000, 0.097em -0.026em 0 #000, 0.050em 0.000em 0 #000, 0.043em 0.025em 0 #000, 0.025em 0.043em 0 #000, 0.000em 0.050em 0 #000, -0.025em 0.043em 0 #000, -0.043em 0.025em 0 #000, -0.050em 0.000em 0 #000, -0.043em -0.025em 0 #000, -0.025em -0.043em 0 #000, -0.000em -0.050em 0 #000, 0.025em -0.043em 0 #000, 0.043em -0.025em 0 #000;
-    letter-spacing: .04em;
+    text-shadow: 0.065em 0.000em 0 #000, 0.063em 0.017em 0 #000, 0.056em 0.032em 0 #000, 0.046em 0.046em 0 #000, 0.033em 0.056em 0 #000, 0.017em 0.063em 0 #000, 0.000em 0.065em 0 #000, -0.017em 0.063em 0 #000, -0.032em 0.056em 0 #000, -0.046em 0.046em 0 #000, -0.056em 0.032em 0 #000, -0.063em 0.017em 0 #000, -0.065em 0.000em 0 #000, -0.063em -0.017em 0 #000, -0.056em -0.032em 0 #000, -0.046em -0.046em 0 #000, -0.033em -0.056em 0 #000, -0.017em -0.063em 0 #000, -0.000em -0.065em 0 #000, 0.017em -0.063em 0 #000, 0.033em -0.056em 0 #000, 0.046em -0.046em 0 #000, 0.056em -0.033em 0 #000, 0.063em -0.017em 0 #000, 0.033em 0.000em 0 #000, 0.029em 0.016em 0 #000, 0.017em 0.029em 0 #000, 0.000em 0.033em 0 #000, -0.016em 0.029em 0 #000, -0.029em 0.016em 0 #000, -0.033em 0.000em 0 #000, -0.029em -0.016em 0 #000, -0.017em -0.029em 0 #000, -0.000em -0.033em 0 #000, 0.017em -0.029em 0 #000, 0.029em -0.017em 0 #000;
+    letter-spacing: .03em;
   }
-  .sticker .name { line-height: 1; }
+  .sticker .name { line-height: 1.08; }
+  /* the name is drawn twice: a black outline copy underneath and a white copy on top,
+     so curved (per-letter) outlines never cut into neighbouring letters */
+  .name .fl { display: none; }
+  .name .w { white-space: nowrap; }
+  .sticker .name .ol { color: #000; }
+  .sticker .name .fl { display: block; position: absolute; inset: 0; color: #fff; text-shadow: none; }
+  .sticker .name .ch { display: inline-block; }
   .sticker .team-label { background: none; padding: 0; margin-top: .12em; }
   .sticker .star { display: block; position: absolute; z-index: 0; overflow: visible; }
   .sticker .star.s1 { width: 7.6em; left: calc(-1em + var(--b)); top: -8.2em; transform: rotate(-14deg); }
@@ -312,6 +319,10 @@ function renderTeams() {
       style="${vars(t)};background-image:var(--img)" title="${t.label}"><span>${t.short}</span></button>`).join('');
 }
 
+// One span per letter (grouped by word so words never split), for the curved name.
+const nameSpans = name => name.trim().split(/\s+/)
+  .map(w => `<span class="w">${[...w].map(ch => `<span class="ch">${esc(ch)}</span>`).join('')}</span>`).join(' ');
+
 function tagHTML(tag, i) {
   const t = byId[tag.team];
   return `
@@ -323,7 +334,7 @@ function tagHTML(tag, i) {
         <svg class="star s1" viewBox="-6 -6 112 112"><path d="${STAR5}"/></svg>
         <svg class="star s2" viewBox="-6 -6 112 112"><path d="${STAR5}"/></svg>
         <svg class="star s3" viewBox="-6 -6 112 112"><path d="${STAR8}"/></svg>
-        <div class="name">${esc(tag.name)}</div>
+        <div class="name"><span class="ol">${nameSpans(tag.name)}</span><span class="fl" aria-hidden="true">${nameSpans(tag.name)}</span></div>
         <div class="team-label">${t.label}</div>
       </div>
     </div>
@@ -378,6 +389,27 @@ const FIT = {
   band:    { label: 2.3, name: 6,   min: 3.6, wrap: 4.4, maxH: 9.5 },
   sticker: { label: 4.4, name: 8.5, min: 5,   wrap: 7,   maxH: 15 },
 };
+// Arch each line of the name: letters drop and tilt outward towards the ends.
+const ARCH = { drop: .22, tilt: 9 }; // drop in em at the line ends, tilt in degrees
+function curveNames() {
+  document.querySelectorAll('.name').forEach(el => {
+    const ol = [...el.querySelectorAll('.ol .ch')], fl = [...el.querySelectorAll('.fl .ch')];
+    if (style !== 'sticker') { [...ol, ...fl].forEach(c => c.style.transform = ''); return; }
+    ol.forEach(c => c.style.transform = '');
+    const lines = new Map();
+    ol.forEach((c, i) => { const k = c.offsetTop; (lines.get(k) || lines.set(k, []).get(k)).push(i); });
+    for (const idx of lines.values()) {
+      const l = ol[idx[0]].offsetLeft, last = ol[idx[idx.length - 1]];
+      const mid = (l + last.offsetLeft + last.offsetWidth) / 2, half = Math.max(1, mid - l);
+      for (const i of idx) {
+        const u = (ol[i].offsetLeft + ol[i].offsetWidth / 2 - mid) / half;
+        const tf = `translateY(${(ARCH.drop * u * u).toFixed(3)}em) rotate(${(ARCH.tilt * u).toFixed(2)}deg)`;
+        ol[i].style.transform = fl[i].style.transform = tf;
+      }
+    }
+  });
+}
+
 function fitNames() {
   const F = FIT[style];
   document.querySelectorAll('.team-label').forEach(el => {
@@ -401,6 +433,7 @@ function fitNames() {
       while ((over() || el.offsetHeight > F.maxH * em) && fs > 2 * em) { fs -= .1 * em; set(); }
     }
   });
+  curveNames();
 }
 
 function flash(text) {
