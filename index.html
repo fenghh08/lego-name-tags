@@ -125,6 +125,31 @@
     background: var(--d); color: var(--lt, var(--t));
   }
 
+  /* ---------- sticker style: outlined white caps straight on the pattern, with stars ---------- */
+  .star { display: none; }
+  .star path { fill: #fff; stroke: #000; stroke-width: 7; stroke-linejoin: round; }
+  .sticker .tag::before { /* soften the pattern so the text pops, plus comic halftone */
+    content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(rgba(0,0,0,.16) 24%, transparent 28%) 0 0 / .9em .9em,
+      color-mix(in srgb, var(--c) 52%, transparent);
+  }
+  .sticker .band {
+    background: none; border: 0; box-shadow: none;
+    padding: 0 calc(1.5em + var(--b));
+    transform: translateY(-50%) rotate(-5deg);
+  }
+  .sticker .name, .sticker .team-label {
+    position: relative; z-index: 1; color: #fff; text-transform: uppercase;
+    -webkit-text-stroke: .17em #000; paint-order: stroke fill; letter-spacing: .03em;
+  }
+  .sticker .name { line-height: 1.02; }
+  .sticker .team-label { background: none; padding: 0; margin-top: .25em; letter-spacing: .04em; }
+  .sticker .star { display: block; position: absolute; z-index: 0; overflow: visible; }
+  .sticker .star.s1 { width: 10em; left: calc(-1.2em + var(--b)); top: -10.5em; transform: rotate(-14deg); }
+  .sticker .star.s2 { width: 8.5em; right: calc(.6em + var(--b)); bottom: -10em; transform: rotate(12deg); }
+  .sticker .star.s3 { width: 4em; right: calc(6.6em + var(--b)); bottom: -3.4em; }
+
   @page { size: A4; margin: 0; }
   @media screen and (max-width: 820px) {
     .app { grid-template-columns: 1fr; }
@@ -146,6 +171,12 @@
   <aside>
     <h1>Name Tags</h1>
     <p class="sub">LE'GO Dance Camp 2026 · ID card size, 9 per A4</p>
+
+    <label for="style">Card style</label>
+    <select id="style">
+      <option value="sticker">Sticker · outlined text + stars</option>
+      <option value="band">Band · name on a colour strip</option>
+    </select>
 
     <label for="font">Name font</label>
     <select id="font"></select>
@@ -217,6 +248,18 @@ const CARD = { w: 54, h: 86, cols: 3, rows: 3 };
 const GAP = 6, BLEED = 2, PER = CARD.cols * CARD.rows;
 const STORE = 'lego-nametags-v1';
 const FONT_STORE = 'lego-nametags-font';
+const STYLE_STORE = 'lego-nametags-style';
+
+// Star outlines (100 × 100 box), filled white with a black stroke via CSS below.
+const starPath = (n, inner) => {
+  const pts = [];
+  for (let i = 0; i < n * 2; i++) {
+    const r = i % 2 ? inner : 50, a = Math.PI * i / n - Math.PI / 2;
+    pts.push(`${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)}`);
+  }
+  return 'M' + pts.join('L') + 'Z';
+};
+const STAR5 = starPath(5, 21), STAR8 = starPath(8, 24);
 // [family, description, weight]
 const FONTS = [
   ['Libre Caslon Condensed', 'Condensed serif, like the lanyard cords', 700],
@@ -271,6 +314,9 @@ function tagHTML(tag, i) {
     <div class="tag" style="${vars(t)};width:${CARD.w + 2 * BLEED}mm;height:${CARD.h + 2 * BLEED}mm;--b:${BLEED}mm;font-size:${CARD.w / 30}mm">
       <div class="hole"></div>
       <div class="band">
+        <svg class="star s1" viewBox="-6 -6 112 112"><path d="${STAR5}"/></svg>
+        <svg class="star s2" viewBox="-6 -6 112 112"><path d="${STAR5}"/></svg>
+        <svg class="star s3" viewBox="-6 -6 112 112"><path d="${STAR8}"/></svg>
         <div class="name">${esc(tag.name)}</div>
         <div class="team-label">${t.label}</div>
       </div>
@@ -322,25 +368,30 @@ function marginTicks() {
 }
 
 // Shrink each name until it fits; long names wrap onto two lines. Team labels stay on one line.
+const FIT = {
+  band:    { label: 2.3, name: 6,   min: 3.6, wrap: 4.4, maxH: 9.5 },
+  sticker: { label: 3.6, name: 8,   min: 5,   wrap: 7,   maxH: 15 },
+};
 function fitNames() {
+  const F = FIT[style];
   document.querySelectorAll('.team-label').forEach(el => {
     const em = parseFloat(getComputedStyle(el.closest('.tag')).fontSize);
     const maxW = el.parentElement.clientWidth - 2 * parseFloat(getComputedStyle(el.parentElement).paddingLeft);
-    let fs = 2.3 * em;
+    let fs = F.label * em;
     el.style.fontSize = fs + 'px';
-    while (el.offsetWidth > maxW && fs > 1.4 * em) { fs -= .05 * em; el.style.fontSize = fs + 'px'; }
+    while (el.scrollWidth > maxW && fs > 1.4 * em) { fs -= .05 * em; el.style.fontSize = fs + 'px'; }
   });
   document.querySelectorAll('.name').forEach(el => {
     const em = parseFloat(getComputedStyle(el.closest('.tag')).fontSize);
     const over = () => el.scrollWidth > el.clientWidth + 1;
-    let fs = 6 * em;
+    let fs = F.name * em;
     const set = () => el.style.fontSize = fs + 'px';
     el.style.whiteSpace = 'nowrap'; set();
-    while (over() && fs > 3.6 * em) { fs -= .1 * em; set(); }
+    while (over() && fs > F.min * em) { fs -= .1 * em; set(); }
     if (over()) {
       el.style.whiteSpace = 'normal';
-      fs = 4.4 * em; set();
-      while ((over() || el.offsetHeight > 9.5 * em) && fs > 2 * em) { fs -= .1 * em; set(); }
+      fs = F.wrap * em; set();
+      while ((over() || el.offsetHeight > F.maxH * em) && fs > 2 * em) { fs -= .1 * em; set(); }
     }
   });
 }
@@ -393,6 +444,17 @@ $('#sheets').addEventListener('click', e => {
 });
 $('#clear').onclick = () => { if (tags.length && confirm('Remove all tags?')) { tags = []; save(); render(); } };
 $('#print').onclick = () => window.print();
+let style = (() => { try { return FIT[localStorage.getItem(STYLE_STORE)] ? localStorage.getItem(STYLE_STORE) : 'sticker'; } catch { return 'sticker'; } })();
+function applyStyle() {
+  $('#sheets').className = style;
+  $('#style').value = style;
+  fitNames();
+}
+$('#style').addEventListener('change', () => {
+  style = $('#style').value;
+  try { localStorage.setItem(STYLE_STORE, style); } catch {}
+  applyStyle();
+});
 let font = (() => { try { const f = localStorage.getItem(FONT_STORE); return FONTS.some(x => x[0] === f) ? f : FONTS[0][0]; } catch { return FONTS[0][0]; } })();
 function applyFont() {
   const css = `"${font}"`, weight = FONTS.find(x => x[0] === font)[2] || 400;
@@ -414,6 +476,7 @@ $('#name').addEventListener('input', () => $('#fontSample').textContent = $('#na
 
 renderTeams();
 render();
+applyStyle();
 applyFont();
 document.fonts?.ready.then(fitNames);
 </script>
