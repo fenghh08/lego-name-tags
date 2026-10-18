@@ -1,2 +1,6 @@
 *.pdf
 .DS_Store
+*.otf
+*.ttf
+*.woff
+*.woff2

@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Condensed:wght@400..700&family=Abril+Fatface&family=Alfa+Slab+One&family=Anton&family=Bangers&family=Bebas+Neue&family=Creepster&family=Eater&family=Lilita+One&family=Luckiest+Guy&family=Rye&family=Shrikhand&family=Ultra&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  @font-face { font-family: "Worldstar Local"; src: local("Worldstar"), local("Worldstar Regular"), local("Worldstar-Regular"); }
   :root {
     --bg: #1b1530;
     --panel: #261d42;
@@ -135,20 +136,23 @@
       color-mix(in srgb, var(--c) 52%, transparent);
   }
   .sticker .band {
+    --sx: 1.18; /* letters stretched wider, as in the concept */
     background: none; border: 0; box-shadow: none;
-    padding: 0 calc(1.5em + var(--b));
-    transform: translateY(-50%) rotate(-5deg);
+    padding: 0 calc(1.1em + var(--b));
   }
   .sticker .name, .sticker .team-label {
-    position: relative; z-index: 1; color: #fff; text-transform: uppercase;
-    -webkit-text-stroke: .17em #000; paint-order: stroke fill; letter-spacing: .03em;
+    position: relative; z-index: 1; color: #fff; text-transform: uppercase; text-align: center;
+    width: calc(100% / var(--sx)); max-width: none; transform: scaleX(var(--sx));
+    /* black outline: rings of hard shadows trace each letter's shape (works with any font) */
+    text-shadow: 0.100em 0.000em 0 #000, 0.097em 0.026em 0 #000, 0.087em 0.050em 0 #000, 0.071em 0.071em 0 #000, 0.050em 0.087em 0 #000, 0.026em 0.097em 0 #000, 0.000em 0.100em 0 #000, -0.026em 0.097em 0 #000, -0.050em 0.087em 0 #000, -0.071em 0.071em 0 #000, -0.087em 0.050em 0 #000, -0.097em 0.026em 0 #000, -0.100em 0.000em 0 #000, -0.097em -0.026em 0 #000, -0.087em -0.050em 0 #000, -0.071em -0.071em 0 #000, -0.050em -0.087em 0 #000, -0.026em -0.097em 0 #000, -0.000em -0.100em 0 #000, 0.026em -0.097em 0 #000, 0.050em -0.087em 0 #000, 0.071em -0.071em 0 #000, 0.087em -0.050em 0 #000, 0.097em -0.026em 0 #000, 0.050em 0.000em 0 #000, 0.043em 0.025em 0 #000, 0.025em 0.043em 0 #000, 0.000em 0.050em 0 #000, -0.025em 0.043em 0 #000, -0.043em 0.025em 0 #000, -0.050em 0.000em 0 #000, -0.043em -0.025em 0 #000, -0.025em -0.043em 0 #000, -0.000em -0.050em 0 #000, 0.025em -0.043em 0 #000, 0.043em -0.025em 0 #000;
+    letter-spacing: .04em;
   }
-  .sticker .name { line-height: 1.02; }
-  .sticker .team-label { background: none; padding: 0; margin-top: .25em; letter-spacing: .04em; }
+  .sticker .name { line-height: 1; }
+  .sticker .team-label { background: none; padding: 0; margin-top: .12em; }
   .sticker .star { display: block; position: absolute; z-index: 0; overflow: visible; }
-  .sticker .star.s1 { width: 10em; left: calc(-1.2em + var(--b)); top: -10.5em; transform: rotate(-14deg); }
-  .sticker .star.s2 { width: 8.5em; right: calc(.6em + var(--b)); bottom: -10em; transform: rotate(12deg); }
-  .sticker .star.s3 { width: 4em; right: calc(6.6em + var(--b)); bottom: -3.4em; }
+  .sticker .star.s1 { width: 7.6em; left: calc(-1em + var(--b)); top: -8.2em; transform: rotate(-14deg); }
+  .sticker .star.s2 { width: 6.6em; right: calc(.2em + var(--b)); bottom: -8.6em; transform: rotate(12deg); }
+  .sticker .star.s3 { width: 3.4em; right: calc(4.6em + var(--b)); bottom: -3em; }
 
   @page { size: A4; margin: 0; }
   @media screen and (max-width: 820px) {
@@ -181,6 +185,7 @@
     <label for="font">Name font</label>
     <select id="font"></select>
     <div class="font-sample" id="fontSample">Eason Chiang</div>
+    <p class="hint" id="fontNote"></p>
 
     <label for="name">Name</label>
     <input id="name" type="text" placeholder="e.g. Eason" autocomplete="off">
@@ -262,6 +267,7 @@ const starPath = (n, inner) => {
 const STAR5 = starPath(5, 21), STAR8 = starPath(8, 24);
 // [family, description, weight]
 const FONTS = [
+  ['Worldstar', 'The lanyard font (only if installed on this computer)', 400],
   ['Libre Caslon Condensed', 'Condensed serif, like the lanyard cords', 700],
   ['Abril Fatface', 'Fat poster serif (closest to the lanyard text)'],
   ['Alfa Slab One', 'Heavy slab serif'],
@@ -370,16 +376,17 @@ function marginTicks() {
 // Shrink each name until it fits; long names wrap onto two lines. Team labels stay on one line.
 const FIT = {
   band:    { label: 2.3, name: 6,   min: 3.6, wrap: 4.4, maxH: 9.5 },
-  sticker: { label: 3.6, name: 8,   min: 5,   wrap: 7,   maxH: 15 },
+  sticker: { label: 4.4, name: 8.5, min: 5,   wrap: 7,   maxH: 15 },
 };
 function fitNames() {
   const F = FIT[style];
   document.querySelectorAll('.team-label').forEach(el => {
     const em = parseFloat(getComputedStyle(el.closest('.tag')).fontSize);
     const maxW = el.parentElement.clientWidth - 2 * parseFloat(getComputedStyle(el.parentElement).paddingLeft);
+    const over = () => el.scrollWidth > Math.min(maxW, el.clientWidth) + 1;
     let fs = F.label * em;
     el.style.fontSize = fs + 'px';
-    while (el.scrollWidth > maxW && fs > 1.4 * em) { fs -= .05 * em; el.style.fontSize = fs + 'px'; }
+    while (over() && fs > 1.4 * em) { fs -= .05 * em; el.style.fontSize = fs + 'px'; }
   });
   document.querySelectorAll('.name').forEach(el => {
     const em = parseFloat(getComputedStyle(el.closest('.tag')).fontSize);
@@ -456,8 +463,19 @@ $('#style').addEventListener('change', () => {
   applyStyle();
 });
 let font = (() => { try { const f = localStorage.getItem(FONT_STORE); return FONTS.some(x => x[0] === f) ? f : FONTS[0][0]; } catch { return FONTS[0][0]; } })();
-function applyFont() {
-  const css = `"${font}"`, weight = FONTS.find(x => x[0] === font)[2] || 400;
+const FALLBACK = 'Libre Caslon Condensed';
+async function applyFont() {
+  let css = `"${font}"`, weight = FONTS.find(x => x[0] === font)[2] || 400;
+  $('#fontNote').textContent = '';
+  if (font === 'Worldstar') {
+    let ok = false;
+    try { ok = (await document.fonts.load('40px "Worldstar Local"')).length > 0; } catch {}
+    if (ok) css = '"Worldstar Local"';
+    else {
+      css = `"${FALLBACK}"`; weight = 700;
+      $('#fontNote').textContent = `Worldstar isn't installed on this computer, so ${FALLBACK} is shown instead. Install the font file (double-click it, then Install) and reload.`;
+    }
+  }
   document.documentElement.style.setProperty('--name-font', css);
   document.documentElement.style.setProperty('--name-weight', weight);
   $('#fontSample').style.fontFamily = `${css}, serif`;
