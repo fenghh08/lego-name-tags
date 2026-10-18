@@ -259,8 +259,8 @@ const byId = Object.fromEntries(TEAMS.map(t => [t.id, t]));
 const CARD = { w: 54, h: 86, cols: 3, rows: 3 };
 const GAP = 6, BLEED = 2, PER = CARD.cols * CARD.rows;
 const STORE = 'lego-nametags-v1';
-const FONT_STORE = 'lego-nametags-font';
-const STYLE_STORE = 'lego-nametags-style';
+const FONT_STORE = 'lego-nametags-font-v2'; // v2: reset old choices to the new defaults
+const STYLE_STORE = 'lego-nametags-style-v2';
 
 // Star outlines (100 × 100 box), filled white with a black stroke via CSS below.
 const starPath = (n, inner) => {
@@ -387,7 +387,7 @@ function marginTicks() {
 // Shrink each name until it fits; long names wrap onto two lines. Team labels stay on one line.
 const FIT = {
   band:    { label: 2.3, name: 6,   min: 3.6, wrap: 4.4, maxH: 9.5 },
-  sticker: { label: 4.4, name: 8.5, min: 5,   wrap: 7,   maxH: 15 },
+  sticker: { label: 3.3, name: 8.5, min: 5,   wrap: 7,   maxH: 15 },
 };
 // Arch each line of the name: letters drop and tilt outward towards the ends.
 const ARCH = { drop: .22, tilt: 9 }; // drop in em at the line ends, tilt in degrees
